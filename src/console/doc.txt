@@ -1,0 +1,13 @@
+npm run make:controller posts
+npm run make:model posts
+npm run make:route posts
+npm run make:middleware auth
+npm run make:factory posts
+
+or 
+
+node src/console/index.js make:controller Post
+node src/console/index.js make:model Post
+node src/console/index.js make:route Post
+node src/console/index.js make:middleware Auth
+node src/console/index.js make:factory User

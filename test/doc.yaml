@@ -1,0 +1,712 @@
+openapi: 3.0.3
+info:
+  title: Clinic EHR API
+  version: '1.0.0'
+  description: >
+    REST API for a multi-doctor clinic EHR. Auth via JWT (access+refresh). MongoDB backend.
+servers:
+  - url: https://api.clinic.example.com/v1
+tags:
+  - name: auth
+  - name: users
+  - name: patients
+  - name: appointments
+  - name: doctors
+  - name: nurses
+  - name: notifications
+  - name: logs
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    Error:
+      type: object
+      properties:
+        code:
+          type: integer
+        message:
+          type: string
+        details:
+          type: object
+      example:
+        code: 409
+        message: "Appointment conflict: doctor unavailable at requested time"
+        details:
+          conflictingAppointmentId: "615f0c..."
+
+    AuthRegister:
+      type: object
+      required: [fullName, email, password, role]
+      properties:
+        fullName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        role:
+          type: string
+          enum: [patient, doctor, nurse, secretary, admin]
+      example:
+        fullName: "Omar Benali"
+        email: "omar@example.com"
+        password: "StrongP@ssw0rd"
+        role: "patient"
+
+    AuthLogin:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      example:
+        email: "omar@example.com"
+        password: "StrongP@ssw0rd"
+
+    TokenResponse:
+      type: object
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+      example:
+        accessToken: "eyJhbGciOi..."
+        refreshToken: "rft_eyJhbGci..."
+        expiresIn: 3600
+
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+        fullName:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+          enum: [admin, doctor, nurse, secretary, patient]
+        status:
+          type: string
+          enum: [active, suspended]
+        specialization:
+          type: string
+        nurseId:
+          type: string
+        assignedDoctor:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        id: "u_615f0c..."
+        fullName: "Dr. Karim"
+        email: "karim@clinic.com"
+        role: "doctor"
+        specialization: "cardiology"
+        nurseId: "u_8b3a21..."
+        createdAt: "2025-10-10T09:00:00Z"
+
+    PatientRecord:
+      type: object
+      properties:
+        id:
+          type: string
+        patientId:
+          type: string
+        lastUpdated:
+          type: string
+          format: date-time
+        visits:
+          type: array
+          items:
+            $ref: '#/components/schemas/Visit'
+      example:
+        id: "pr_5f..."
+        patientId: "u_p123"
+        lastUpdated: "2025-10-10T09:30:00Z"
+        visits:
+          - visitId: "v_1"
+            date: "2025-10-10T09:30:00Z"
+            doctorId: "u_d1"
+            nurseId: "u_n1"
+            diagnosis: ["Hypertension"]
+            symptoms: ["headache", "dizziness"]
+            treatments:
+              - name: "Amlodipine"
+                dosage: "5mg"
+                duration: "30 days"
+            notes: "Follow-up in 1 month"
+
+    Visit:
+      type: object
+      properties:
+        visitId:
+          type: string
+        date:
+          type: string
+          format: date-time
+        doctorId:
+          type: string
+        nurseId:
+          type: string
+        diagnosis:
+          type: array
+          items: { type: string }
+        symptoms:
+          type: array
+          items: { type: string }
+        treatments:
+          type: array
+          items:
+            type: object
+            properties:
+              name: { type: string }
+              dosage: { type: string }
+              duration: { type: string }
+        notes:
+          type: string
+
+    Appointment:
+      type: object
+      properties:
+        id: { type: string }
+        patientId: { type: string }
+        doctorId: { type: string }
+        nurseId: { type: string, nullable: true }
+        secretaryId: { type: string, nullable: true }
+        startTime: { type: string, format: date-time }
+        endTime: { type: string, format: date-time }
+        status:
+          type: string
+          enum: [scheduled, in-progress, completed, cancelled, no-show]
+        reason: { type: string }
+        notes: { type: string }
+        createdAt: { type: string, format: date-time }
+      example:
+        id: "a_615f..."
+        patientId: "u_p123"
+        doctorId: "u_d1"
+        nurseId: "u_n1"
+        startTime: "2025-11-01T09:30:00Z"
+        endTime: "2025-11-01T10:00:00Z"
+        status: "scheduled"
+        reason: "Follow-up"
+
+    AppointmentCreate:
+      type: object
+      required: [patientId, doctorId, startTime, endTime]
+      properties:
+        patientId: { type: string }
+        doctorId: { type: string }
+        nurseId: { type: string, nullable: true }
+        startTime: { type: string, format: date-time }
+        endTime: { type: string, format: date-time }
+        reason: { type: string }
+      example:
+        patientId: "u_p123"
+        doctorId: "u_d1"
+        startTime: "2025-11-01T09:30:00Z"
+        endTime: "2025-11-01T10:00:00Z"
+        reason: "Routine check"
+
+    AvailabilityResponse:
+      type: object
+      properties:
+        doctorId: { type: string }
+        date: { type: string, format: date }
+        slots:
+          type: array
+          items:
+            type: object
+            properties:
+              start: { type: string, format: date-time }
+              end: { type: string, format: date-time }
+              available: { type: boolean }
+
+    LogEntry:
+      type: object
+      properties:
+        id: { type: string }
+        userId: { type: string }
+        role: { type: string }
+        action: { type: string }
+        target:
+          type: object
+          properties:
+            type: { type: string }
+            id: { type: string }
+        description: { type: string }
+        createdAt: { type: string, format: date-time }
+
+  parameters:
+    pageParam:
+      name: page
+      in: query
+      schema:
+        type: integer
+        default: 1
+    perPageParam:
+      name: perPage
+      in: query
+      schema:
+        type: integer
+        default: 20
+        maximum: 100
+
+security:
+  - BearerAuth: []
+
+paths:
+
+  /auth/register:
+    post:
+      tags: [auth]
+      summary: Register new user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthRegister' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /auth/login:
+    post:
+      tags: [auth]
+      summary: Login (returns access + refresh tokens)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AuthLogin' }
+      responses:
+        '200':
+          description: tokens
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /auth/refresh:
+    post:
+      tags: [auth]
+      summary: Refresh access token
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                refreshToken:
+                  type: string
+      responses:
+        '200':
+          description: new tokens
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TokenResponse' }
+        '401':
+          description: invalid / expired refresh token
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+  /users:
+    get:
+      tags: [users]
+      summary: List users (admin only)
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/perPageParam'
+        - name: role
+          in: query
+          schema:
+            type: string
+      responses:
+        '200':
+          description: paginated list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  total: { type: integer }
+                  page: { type: integer }
+                  perPage: { type: integer }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/User' }
+        '403':
+          description: forbidden
+
+    post:
+      tags: [users]
+      summary: Create user (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              allOf:
+                - $ref: '#/components/schemas/AuthRegister'
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  /users/{id}:
+    get:
+      tags: [users]
+      summary: Get user by id (admin or self)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: user
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+        '404':
+          description: not found
+
+    put:
+      tags: [users]
+      summary: Update user (admin or self)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+      responses:
+        '200':
+          description: updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+    delete:
+      tags: [users]
+      summary: Soft-delete user (admin)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: deleted (soft)
+
+  /patients:
+    post:
+      tags: [patients]
+      summary: Create patient record (doctor / admin / secretary)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [patientId]
+              properties:
+                patientId: { type: string }
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PatientRecord' }
+
+    get:
+      tags: [patients]
+      summary: Search / list patients
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/perPageParam'
+        - name: q
+          in: query
+          schema:
+            type: string
+            description: search by name, email or phone
+      responses:
+        '200':
+          description: list
+
+  /patients/{id}:
+    get:
+      tags: [patients]
+      summary: Get patient record with visits (doctor with permission or patient)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: patient record
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PatientRecord' }
+        '403':
+          description: forbidden
+        '404':
+          description: not found
+
+  /patients/{id}/visits:
+    post:
+      tags: [patients]
+      summary: Add a visit (doctor)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Visit'
+      responses:
+        '201':
+          description: visit added
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Visit' }
+        '403':
+          description: forbidden
+
+  /appointments:
+    post:
+      tags: [appointments]
+      summary: Create appointment (patient / secretary / doctor)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AppointmentCreate' }
+      responses:
+        '201':
+          description: created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Appointment' }
+        '409':
+          description: Conflict - overlapping appointment
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Error' }
+
+    get:
+      tags: [appointments]
+      summary: List appointments (filterable)
+      parameters:
+        - name: doctorId
+          in: query
+          schema: { type: string }
+        - name: patientId
+          in: query
+          schema: { type: string }
+        - name: from
+          in: query
+          schema: { type: string, format: date-time }
+        - name: to
+          in: query
+          schema: { type: string, format: date-time }
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/perPageParam'
+      responses:
+        '200':
+          description: paginated appointments
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  page: { type: integer }
+                  perPage: { type: integer }
+                  total: { type: integer }
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/Appointment' }
+
+  /appointments/{id}:
+    get:
+      tags: [appointments]
+      summary: Get appointment details
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Appointment' }
+
+    put:
+      tags: [appointments]
+      summary: Update appointment (time/status/notes)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                startTime: { type: string, format: date-time }
+                endTime: { type: string, format: date-time }
+                status: { type: string }
+                nurseId: { type: string }
+      responses:
+        '200':
+          description: updated
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Appointment' }
+        '409':
+          description: conflict on time change
+
+    delete:
+      tags: [appointments]
+      summary: Cancel appointment (soft)
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '204':
+          description: canceled
+
+  /doctors/{id}/availability:
+    get:
+      tags: [doctors]
+      summary: Get availability slots for doctor on a date
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+        - name: date
+          in: query
+          required: true
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: slots
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AvailabilityResponse' }
+
+  /nurses/{id}:
+    get:
+      tags: [nurses]
+      summary: Get nurse profile, assigned doctor and shifts
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/User' }
+
+  /notifications:
+    get:
+      tags: [notifications]
+      summary: Get notifications for current user
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/perPageParam'
+      responses:
+        '200':
+          description: list
+
+    post:
+      tags: [notifications]
+      summary: Create a system notification (admin)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [userId, title, message]
+              properties:
+                userId: { type: string }
+                title: { type: string }
+                message: { type: string }
+                type: { type: string }
+      responses:
+        '201':
+          description: created
+
+  /logs:
+    get:
+      tags: [logs]
+      summary: Get audit logs (admin)
+      parameters:
+        - $ref: '#/components/parameters/pageParam'
+        - $ref: '#/components/parameters/perPageParam'
+      responses:
+        '200':
+          description: list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items: { $ref: '#/components/schemas/LogEntry' }
+
+externalDocs:
+  description: Implementation notes (transactions, indexes, conflict handling)
+  url: https://example.com/clinic-ehr/api-notes

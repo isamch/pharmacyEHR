@@ -1,0 +1,27 @@
+# Dependencies
+/node_modules
+/jspm_packages
+
+# Testing
+/coverage
+
+# Build/Dist
+/dist
+/build
+
+# Production/Deployment
+/npm-debug.log*
+/yarn-error.log*
+/pnpm-debug.log*
+
+# Environment Variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE/OS/Editor-specific files
+.vscode/
+.DS_Store
+Thumbs.dbs
