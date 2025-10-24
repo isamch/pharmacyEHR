@@ -1,7 +1,5 @@
 import User from '../../models/User.js'
 import Token from '../../models/Token.js'
-import PatientRecord from '../../models/PatientRecord.js'
-import Patient from '../../models/Patient.js'
 import Role from '../../models/Role.js'
 
 import { sendCookies, clearCookie } from "../../utils/Cookies.js";
