@@ -3,6 +3,7 @@ import * as userController from '../../controllers/admin/user.admin.controller.j
 import * as clientController from '../../controllers/admin/client.admin.controller.js';
 import * as roleController from '../../controllers/admin/role.admin.controller.js';
 import * as medicationController from '../../controllers/admin/medication.admin.controller.js';
+import * as apiTokenController from '../../controllers/admin/apiToken.admin.controller.js';
 import { authMiddleware } from '../../middleware/authMiddleware.js';
 import { requireAdmin, requirePermissions } from '../../middleware/permissionMiddleware.js';
 
@@ -48,5 +49,14 @@ router.get('/medications/:id', medicationController.getMedicationById);
 router.put('/medications/:id', medicationController.updateMedication);
 router.put('/medications/:id/stock', medicationController.updateMedicationStock);
 router.delete('/medications/:id', medicationController.deleteMedication);
+
+// API Token management routes
+router.post('/clients/:clientId/tokens', apiTokenController.generateApiToken);
+router.get('/clients/:clientId/tokens', apiTokenController.getClientTokens);
+router.get('/tokens', apiTokenController.getAllTokens);
+router.get('/tokens/statistics', apiTokenController.getTokenStatistics);
+router.get('/tokens/:id', apiTokenController.getTokenById);
+router.put('/tokens/:id', apiTokenController.updateApiToken);
+router.delete('/tokens/:id', apiTokenController.revokeApiToken);
 
 export default router;

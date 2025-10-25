@@ -1,50 +1,85 @@
 import mongoose from 'mongoose';
 
-const medicationItemSchema = new mongoose.Schema({
-  name: { type: String, required: true }, // As written by doctor
-  dosage: String,
-  duration: String,
-  quantity: { type: Number, required: true },
-  // Link to inventory item (optional, requires matching logic)
-  medicationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Medication', optional: true },
-  dispensedQuantity: { type: Number, default: 0 } // How much was actually given
-}, { _id: false });
-
-
-const supplyItemSchema = new mongoose.Schema({
-  name: { type: String, required: true },
-  quantity: { type: Number, required: true },
-  dispensedQuantity: { type: Number, default: 0 }
-}, { _id: false });
-
-
-
 const prescriptionSchema = new mongoose.Schema({
-  clientVisitId: { type: String, required: true }, // visitId from Careflow's visitSchema
-  clientPatientId: { type: String, required: true }, // Patient Profile ID from Careflow
-  clientDoctorId: { type: String, required: true }, // Doctor Profile ID from Careflow
-  clientPatientName: String, // For easy display
-  receivedFrom: { // Link to the verified Client document (Careflow's account here)
+  prescriptionId: {
+    type: String,
+    unique: true,
+    default: function() {
+      return `PRESC_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    }
+  },
+  patientId: {
+    type: String,
+    required: true
+  },
+  patientName: {
+    type: String,
+    required: true
+  },
+  patientAge: Number,
+  patientPhone: String,
+  doctorName: {
+    type: String,
+    required: true
+  },
+  doctorLicense: String,
+  clinicName: {
+    type: String,
+    required: true
+  },
+  clientId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Client',
     required: true
   },
-  medications: [medicationItemSchema],
-  supplies: [supplyItemSchema],
-  clientNotes: String, // Notes from doctor (Careflow)
+  medications: [{
+    medicationId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Medication',
+      required: true
+    },
+    medicationName: {
+      type: String,
+      required: true
+    },
+    quantity: {
+      type: Number,
+      required: true,
+      min: 1
+    },
+    dosage: {
+      type: String,
+      required: true
+    },
+    duration: String,
+    notes: String,
+    price: Number,
+    totalPrice: Number
+  }],
+  prescriptionNotes: String,
+  prescriptionDate: {
+    type: Date,
+    default: Date.now
+  },
   status: {
     type: String,
-    enum: ['received', 'processing', 'ready_for_pickup', 'dispensed', 'cancelled', 'on_hold'],
-    default: 'received',
-    index: true // Index status for faster querying
+    enum: ['pending', 'processing', 'ready', 'completed', 'cancelled'],
+    default: 'pending'
   },
-  pharmacistNotes: String, // Internal notes
-  processedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'PharmacyUser' }, // Staff who handled it
-  dispensedAt: Date, // When it was fully dispensed
-  // Add billing info if needed
-  // totalPrice: Number, paymentStatus: String
+  totalCost: {
+    type: Number,
+    default: 0
+  },
+  notes: String, // Pharmacy notes
+  processedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'PharmacyUser'
+  },
+  processedAt: Date,
+  readyAt: Date,
+  completedAt: Date
 }, {
-  timestamps: true, // createdAt = time received
+  timestamps: true,
   toJSON: {
     transform: (doc, ret) => {
       ret.id = ret._id.toString();
@@ -55,9 +90,10 @@ const prescriptionSchema = new mongoose.Schema({
   }
 });
 
-prescriptionSchema.index({ clientVisitId: 1 });
-prescriptionSchema.index({ status: 1, createdAt: -1 });
-prescriptionSchema.index({ receivedFrom: 1, createdAt: -1 }); // Index by client
-
+// Indexes for better performance
+prescriptionSchema.index({ clientId: 1, prescriptionDate: -1 });
+prescriptionSchema.index({ patientId: 1 });
+prescriptionSchema.index({ status: 1 });
+prescriptionSchema.index({ prescriptionId: 1 });
 
 export default mongoose.model('Prescription', prescriptionSchema);
