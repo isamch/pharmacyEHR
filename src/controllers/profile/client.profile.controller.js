@@ -183,6 +183,8 @@ export const deleteAccount = asyncHandler(async (req, res, next) => {
   return successResponse(res, 200, 'Account deleted successfully');
 });
 
+
+
 /**
  * @desc    Get client dashboard data
  * @route   GET /api/v1/client/dashboard
