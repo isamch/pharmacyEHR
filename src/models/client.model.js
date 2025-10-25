@@ -10,10 +10,10 @@ const clientSchema = new mongoose.Schema({
     required: true,
     unique: true
   },
-  publicKey: { // <-- Stores the PEM public key provided by the client (Careflow)
+  password: {
     type: String,
-    required: function () { return this.status === 'verified'; }, // Make it required once verified
-    trim: true
+    required: true,
+    select: false // Hide by default
   },
   status: {
     type: String,
@@ -22,6 +22,8 @@ const clientSchema = new mongoose.Schema({
   },
   verificationToken: { type: String, select: false }, // Hide by default
   verificationExpires: { type: Date, select: false },
+  passwordResetToken: { type: String, select: false }, // Hide by default
+  passwordResetExpires: { type: Date, select: false },
   // ²Optional contact details
   contactPerson: String,
   phone: String,

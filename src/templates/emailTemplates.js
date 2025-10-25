@@ -40,5 +40,16 @@ export const emailTemplates = {
 
     </div>
   `,
+  clientVerification: ({ clientName, verificationToken, verificationUrl }) => `
+    <div style="font-family: Arial, sans-serif; text-align: center;">
+      <h2>Verify Your Pharmacy Client Account</h2>
+      <p>Hi ${clientName},</p>
+      <p>Thank you for registering! Please click the button below to verify your email address:</p>
+      <a href="${verificationUrl}">${verificationUrl}</a>
+    </div>
+    <p>If the button doesn’t work, copy and paste the following link in your browser:</p>
+    <p style="word-break: break-all;"><a href="${verificationUrl}">${verificationUrl}</a></p>
+    <p style="color: #888; font-size: 12px;">This link will expire in 10 minutes.</p>
+  `,
 };
 
