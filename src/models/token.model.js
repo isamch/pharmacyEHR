@@ -13,7 +13,14 @@ const tokenSchema = new mongoose.Schema({
     expires: process.env.JWT_REFRESH_EXPIRES_IN || '7d'
   }
 }, {
-  toJSON: { /* transform */ }
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
 });
 
 tokenSchema.index({ userId: 1 });

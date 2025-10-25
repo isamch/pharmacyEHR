@@ -22,13 +22,25 @@ const userSchema = new mongoose.Schema({
   }, // Refers to PharmacyRole
   status: {
     type: String,
-    enum: ['active', 'suspended'], default: 'active'
+    enum: ['active', 'suspended'],
+    default: 'active'
   },
   // Add reset/verification fields if needed for staff accounts
   passwordResetToken: String,
   passwordResetExpires: Date,
 }, {
   timestamps: true,
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      delete ret.password; // Always remove password
+      delete ret.passwordResetToken;
+      delete ret.passwordResetExpires;
+      return ret;
+    }
+  }
 });
 
 export default mongoose.model('PharmacyUser', userSchema); // Use distinct name

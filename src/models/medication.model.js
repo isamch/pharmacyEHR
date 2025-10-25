@@ -28,8 +28,19 @@ const medicationSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   },
+  category: String, // e.g., 'Analgesic', 'Antibiotic'
+  supplier: String,
+  lastUpdatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'PharmacyUser' } // Track who updated stock
 }, {
   timestamps: true,
+  toJSON: {
+    transform: (doc, ret) => {
+      ret.id = ret._id.toString();
+      delete ret._id;
+      delete ret.__v;
+      return ret;
+    }
+  }
 });
 
 
