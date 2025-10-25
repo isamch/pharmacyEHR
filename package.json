@@ -1,13 +1,14 @@
 {
-  "name": "ehr",
+  "name": "pharmacy-microservice",
   "version": "0.1.0",
+  "description": "Pharmacy Microservice with Asymmetric Auth",
   "private": true,
-  "description": "",
   "main": "server.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon server.js",
-    "start": "node server.js"
+    "start": "node server.js",
+    "generate-keys": "node scripts/generateKeys.js"
   },
   "author": "isam chajia",
   "dependencies": {
@@ -24,6 +25,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.17.2",
     "morgan": "^1.10.1",
+    "http-errors": "^2.0.0",
     "nodemailer": "^7.0.5"
   },
   "devDependencies": {

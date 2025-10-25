@@ -25,3 +25,7 @@
 .vscode/
 .DS_Store
 Thumbs.dbs
+
+# SSL Keys 
+keys/pharmacy_private.pem
+keys/pharmacy_public.pem

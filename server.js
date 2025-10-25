@@ -1,15 +1,15 @@
-import app from './app.js'
-import dotenv from 'dotenv'
-import connectDB from './src/config/db.js'
+import app from './app.js';
+import dotenv from 'dotenv';
+import connectDB from './src/config/db.js';
 
-// Load env vars
-dotenv.config()
+// Load environment variables from .env file
+dotenv.config();
 
-// Connect to database
-connectDB()
+// Connect to MongoDB database
+connectDB();
 
-const PORT = process.env.PORT || 5000
+const PORT = process.env.PORT || 5001; 
 
 app.listen(PORT, () => {
-  console.log(`Server running in ${process.env.NODE_ENV} mode on port ${PORT}`)
-})
+  console.log(`Pharmacy server running in ${process.env.NODE_ENV} mode on port ${PORT}`);
+});
