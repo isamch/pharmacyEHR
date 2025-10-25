@@ -7,12 +7,12 @@ import {
   deleteAccount,
   getDashboard
 } from '../../controllers/profile/client.profile.controller.js';
-import { authMiddleware } from '../../middleware/authMiddleware.js';
+import { protect } from '../../middleware/authMiddleware.js';
 
 const router = express.Router();
 
 // All routes require authentication
-router.use(authMiddleware);
+router.use(protect);
 
 // Profile management routes
 router.get('/profile', getProfile);

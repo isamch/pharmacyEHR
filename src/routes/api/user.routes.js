@@ -1,12 +1,12 @@
 import express from 'express';
 import * as medicationController from '../../controllers/user/medication.user.controller.js';
-import { authMiddleware } from '../../middleware/authMiddleware.js';
+import { protect } from '../../middleware/authMiddleware.js';
 import { requireMedicationAccess } from '../../middleware/permissionMiddleware.js';
 
 const router = express.Router();
 
 // All user routes require authentication and medication access
-router.use(authMiddleware);
+router.use(protect);
 router.use(requireMedicationAccess);
 
 // Medication management routes (for users)

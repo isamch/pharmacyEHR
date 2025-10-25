@@ -3,7 +3,7 @@ import Client from '../../models/client.model.js';
 import { successResponse } from '../../utils/apiResponse.js';
 import * as ApiError from '../../utils/ApiError.js';
 import asyncHandler from '../../utils/asyncHandler.js';
-import getPagination from '../../utils/pagination.js';
+import { getPagination } from '../../utils/pagination.js';
 import ms from 'ms';
 import dayjs from 'dayjs';
 
@@ -185,9 +185,9 @@ export const revokeApiToken = asyncHandler(async (req, res, next) => {
 export const getTokenStatistics = asyncHandler(async (req, res) => {
   const totalTokens = await ApiToken.countDocuments();
   const activeTokens = await ApiToken.countDocuments({ isActive: true });
-  const expiredTokens = await ApiToken.countDocuments({ 
+  const expiredTokens = await ApiToken.countDocuments({
     expiresAt: { $lt: new Date() },
-    isActive: true 
+    isActive: true
   });
 
   // Get tokens by client

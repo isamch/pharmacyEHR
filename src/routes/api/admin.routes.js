@@ -4,13 +4,13 @@ import * as clientController from '../../controllers/admin/client.admin.controll
 import * as roleController from '../../controllers/admin/role.admin.controller.js';
 import * as medicationController from '../../controllers/admin/medication.admin.controller.js';
 import * as apiTokenController from '../../controllers/admin/apiToken.admin.controller.js';
-import { authMiddleware } from '../../middleware/authMiddleware.js';
+import { protect } from '../../middleware/authMiddleware.js';
 import { requireAdmin, requirePermissions } from '../../middleware/permissionMiddleware.js';
 
 const router = express.Router();
 
 // All admin routes require authentication and admin role
-router.use(authMiddleware);
+router.use(protect);
 router.use(requireAdmin);
 
 // User management routes

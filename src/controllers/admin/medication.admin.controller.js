@@ -2,7 +2,8 @@ import Medication from '../../models/medication.model.js';
 import { successResponse } from '../../utils/apiResponse.js';
 import * as ApiError from '../../utils/ApiError.js';
 import asyncHandler from '../../utils/asyncHandler.js';
-import getPagination from '../../utils/pagination.js';
+import { getPagination } from '../../utils/pagination.js';
+
 
 /**
  * @desc    Create a new medication

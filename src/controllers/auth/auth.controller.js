@@ -1,5 +1,5 @@
 import User from '../../models/user.model.js'; // PharmacyUser model
-import Role from '../../models/role.model.js'; // PharmacyRole model
+// import Role from '../../models/role.model.js'; // PharmacyRole model
 import Token from '../../models/token.model.js'; // PharmacyToken model
 import { generateAccessToken, generateRefreshToken, decode, verifyRefreshToken } from '../../utils/jwt.js'; // Uses symmetric keys from .env
 import { successResponse } from '../../utils/apiResponse.js';
