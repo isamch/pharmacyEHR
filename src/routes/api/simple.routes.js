@@ -2,26 +2,18 @@ import express from 'express';
 import {
   createPrescription,
   getAllPrescriptions,
-  searchPrescriptionByPatientName,
+  searchPrescriptionsByPatientName,
   updatePrescriptionStatus,
   getAvailableMedications
-} from '../controllers/simple/prescription.controller.js';
+} from '../../controllers/simple/prescription.controller.js';
 
 const router = express.Router();
 
-// Create new prescription
+// Simple MVP Routes (No authentication required)
 router.post('/prescriptions', createPrescription);
-
-// Get all prescriptions
 router.get('/prescriptions', getAllPrescriptions);
-
-// Search prescription by patient name
-router.get('/prescriptions/search/:patientName', searchPrescriptionByPatientName);
-
-// Update prescription status
+router.get('/prescriptions/search/:patientName', searchPrescriptionsByPatientName);
 router.put('/prescriptions/:id/status', updatePrescriptionStatus);
-
-// Get available medications
 router.get('/medications', getAvailableMedications);
 
 export default router;

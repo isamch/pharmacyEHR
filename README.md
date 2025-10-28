@@ -1,368 +1,365 @@
-# CareFlow EHR - Electronic Health Record Management System
+# Pharmacy Management System - MVP
 
-A comprehensive Electronic Health Record (EHR) management system built with Node.js, Express.js, and MongoDB. This system provides a complete solution for managing medical records, appointments, and patient care across multiple healthcare roles including patients, doctors, nurses, secretaries, and administrators.
+## Overview
+A simple MVP pharmacy management system with authentication, user management, and medication inventory control. Built with Node.js, Express.js, and MongoDB.
 
 ## Features
 
-### Core Healthcare Management
-- **Multi-role User System**: Support for Patients, Doctors, Nurses, Secretaries, and Administrators
-- **Appointment Management**: Complete appointment scheduling, modification, and cancellation system
-- **Electronic Medical Records**: Comprehensive patient record management with visit history
-- **Role-based Access Control**: Granular permissions system for different user types
-- **Real-time Notifications**: System-wide notification management
+### 🔐 Authentication System
+- User registration and login
+- JWT token-based authentication
+- Role-based access control (Admin, Pharmacist, Staff)
+- Password hashing with bcryptjs
+- Token refresh mechanism
 
-### Technical Features
-- **JWT Authentication**: Secure authentication with HTTP-only cookies and refresh tokens
-- **Email Verification**: OTP-based email verification system using Nodemailer
-- **Input Validation**: Comprehensive validation using Joi schemas
-- **Error Handling**: Centralized error handling with consistent API responses
-- **Security**: Helmet, CORS, and other security middleware
-- **Database**: MongoDB with Mongoose ODM
-- **Pagination**: Built-in pagination utilities for large datasets
-- **Logging**: Comprehensive system logging and audit trails
+### 👥 User Management (Admin Only)
+- Create, read, update, delete users
+- Change user passwords
+- User statistics and analytics
+- Role assignment (Admin, Pharmacist, Staff)
+- User status management (Active, Inactive, Suspended)
 
-### Healthcare-Specific Features
-- **Patient Records**: Blood type, medical history, visit tracking
-- **Doctor Profiles**: Specialization, working hours, assigned nurses
-- **Appointment Scheduling**: Time slot management with availability checking
-- **Medical Visits**: Diagnosis tracking, treatment management, notes
-- **Notification System**: Patient and staff notifications
+### 💊 Medication Management
+- Add, edit, delete medications
+- Stock quantity management
+- Price and category management
+- Low stock alerts
+- Medication statistics
+- Search and filter medications
 
-## Quick Start
+### 📋 Prescription Processing
+- Receive prescriptions from clinics
+- Process and track prescription status
+- Patient lookup by name
+- Prescription history
 
-```bash
-# 1) Clone the repository
-git clone <repository-url>
-cd careflow-ehr
-
-# 2) Install dependencies
-npm install
-
-# 3) Configure environment variables
-cp .env.example .env
-# Edit .env with your configuration
-
-# 4) Start MongoDB (if not running)
-# Make sure MongoDB is running on your system
-
-# 5) Run development server
-npm run dev
+## Base URL
+```
+http://localhost:5001/api
 ```
 
-The API will be available at `http://localhost:5000/api`
+## Authentication
 
-## Scripts
+### Register New User
+```http
+POST /api/auth/register
+Content-Type: application/json
 
-- `npm run dev`: Run with Nodemon on `server.js`
-- `npm start`: Run with Node
+{
+  "fullName": "John Doe",
+  "email": "john@pharmacy.com",
+  "password": "password123",
+  "role": "staff"
+}
+```
+
+### Login
+```http
+POST /api/auth/login
+Content-Type: application/json
+
+{
+  "email": "john@pharmacy.com",
+  "password": "password123"
+}
+```
+
+**Response:**
+```json
+{
+  "status": "success",
+  "message": "Login successful",
+  "data": {
+    "user": {
+      "id": "64f1a2b3c4d5e6f7g8h9i0j1",
+      "fullName": "John Doe",
+      "email": "john@pharmacy.com",
+      "role": "staff",
+      "status": "active"
+    },
+    "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+    "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+  }
+}
+```
+
+## User Management (Admin Only)
+
+### Get All Users
+```http
+GET /api/admin/users
+Authorization: Bearer <token>
+```
+
+### Create New User
+```http
+POST /api/admin/users
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "fullName": "Jane Pharmacist",
+  "email": "jane@pharmacy.com",
+  "password": "password123",
+  "role": "pharmacist"
+}
+```
+
+### Update User
+```http
+PUT /api/admin/users/:id
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "fullName": "Jane Smith",
+  "role": "pharmacist",
+  "status": "active"
+}
+```
+
+### Delete User
+```http
+DELETE /api/admin/users/:id
+Authorization: Bearer <token>
+```
+
+## Medication Management
+
+### Get All Medications
+```http
+GET /api/medications
+Authorization: Bearer <token>
+```
+
+### Create New Medication
+```http
+POST /api/medications
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "name": "Aspirin 100mg",
+  "code": "ASP_100",
+  "description": "Pain reliever and anti-inflammatory",
+  "stockQuantity": 50,
+  "unit": "box",
+  "price": 12.50,
+  "requiresPrescription": true,
+  "category": "Analgesics",
+  "supplier": "PharmaCorp"
+}
+```
+
+### Update Medication Stock
+```http
+PUT /api/medications/:id/stock
+Authorization: Bearer <token>
+Content-Type: application/json
+
+{
+  "stockQuantity": 100,
+  "operation": "set"
+}
+```
+
+### Get Low Stock Medications
+```http
+GET /api/medications/low-stock?threshold=10
+Authorization: Bearer <token>
+```
+
+## Prescription Management
+
+### Create Prescription (from clinic)
+```http
+POST /api/prescriptions
+Content-Type: application/json
+
+{
+  "patientName": "John Doe",
+  "doctorName": "Dr. Smith",
+  "clinicCode": "CLINIC_001",
+  "medications": [
+    {
+      "medicationName": "Paracetamol 500mg",
+      "quantity": 2,
+      "dosage": "500mg"
+    }
+  ]
+}
+```
+
+### Search Prescription by Patient Name
+```http
+GET /api/prescriptions/search/John Doe
+```
+
+### Update Prescription Status
+```http
+PUT /api/prescriptions/:id/status
+Content-Type: application/json
+
+{
+  "status": "ready",
+  "notes": "Prescription is ready for pickup"
+}
+```
+
+## User Roles & Permissions
+
+### Admin
+- Full system access
+- User management (create, update, delete users)
+- All medication management features
+- System statistics and analytics
+
+### Pharmacist
+- Medication management (create, update, delete medications)
+- Stock management
+- Prescription processing
+- View medication statistics
+
+### Staff
+- View medications
+- Update stock quantities
+- Process prescriptions
+- Basic medication management
 
 ## Environment Variables
 
-Create a `.env` file in the project root with:
+Create a `.env` file with:
 
 ```env
-# Server
-PORT=5000
+# Server Configuration
+PORT=5001
 NODE_ENV=development
 
 # Database
-DB_URL=mongodb://localhost:27017/careflow_ehr
+DB_URL=mongodb://localhost:27017/pharmacy_db
 
-# JWT
-JWT_SECRET=your_jwt_secret_here
-JWT_REFRESH_SECRET=your_refresh_secret_here
+# JWT Configuration
+JWT_SECRET=pharmacy_jwt_secret_here
+JWT_REFRESH_SECRET=pharmacy_refresh_secret_here
+JWT_EXPIRES_IN=15m
+JWT_REFRESH_EXPIRES_IN=7d
 
-# HMAC (for OTP hashing)
-HMAC_VERIFICATION_CODE_SECRET=your_hmac_secret_here
-
-# SMTP (email)
-SMTP_HOST=smtp.example.com
+# Email Configuration
+SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_SECURE=false
-SMTP_USER=your@email.com
-SMTP_PASS=your_password
+SMTP_USER=pharmacy@example.com
+SMTP_PASS=pharmacy_password
 ```
 
-## Project Structure
+## Getting Started
 
-```
-server.js                # Entry point; loads app and starts HTTP server
-app.js                   # Express app configuration and middleware
-src/
-  config/
-    db.js                # MongoDB connection configuration
-  controllers/
-    auth/                # Authentication controllers
-      authController.js  # register/login/logout, email verification
-    admin/               # Admin-specific controllers
-      userController.js  # User management
-      logController.js   # System logs
-      NotificationController.js # Admin notifications
-    doctor/              # Doctor-specific controllers
-      appointmentController.js # Doctor appointment management
-      patientController.js    # Patient management
-      profileController.js    # Doctor profile management
-      availabilityController.js # Working hours management
-    nurse/               # Nurse-specific controllers
-      appointmentController.js # Nurse appointment management
-      patientController.js    # Patient management
-      profileController.js    # Nurse profile management
-    patient/             # Patient-specific controllers
-      appointmentController.js # Patient appointment management
-      recordController.js     # Medical record access
-    secretary/           # Secretary-specific controllers
-      appointmentController.js # Secretary appointment management
-      patientController.js    # Patient management
-      profileController.js    # Secretary profile management
-    shared/              # Shared controllers
-      NotificationController.js # Shared notification system
-      patientRecord.js   # Shared patient record management
-      userController.js  # Shared user operations
-  middleware/
-    authMiddleware.js    # JWT authentication and authorization
-    errorHandler.js      # Centralized error handling
-    validatorMiddleware.js # Joi schema validation
-    uploadMiddleware.js  # File upload handling
-  models/
-    User.js              # User model with role-based access
-    Patient.js           # Patient profile model
-    Doctor.js            # Doctor profile model
-    Nurse.js             # Nurse profile model
-    Secretary.js         # Secretary profile model
-    Appointment.js       # Appointment scheduling model
-    PatientRecord.js     # Medical records model
-    Role.js              # Role and permissions model
-    Notification.js      # Notification system model
-    Log.js               # System logging model
-    Token.js             # JWT token management
-  routes/
-    api/                 # API route definitions
-      auth.routes.js     # Authentication endpoints
-      admin.routes.js    # Admin management endpoints
-      doctor.routes.js   # Doctor-specific endpoints
-      nurse.routes.js    # Nurse-specific endpoints
-      patient.routes.js  # Patient-specific endpoints
-      secretary.routes.js # Secretary-specific endpoints
-      user.routes.js     # Shared user endpoints
-      home.routes.js     # Public home endpoints
-    api.js               # Main API router
-    router.js            # Root router configuration
-  validations/           # Joi validation schemas
-    authValidation.js    # Authentication validation
-    appointmentValidation.js # Appointment validation
-    userValidation.js    # User validation
-    # ... other validation files
-  utils/                 # Utility functions
-    apiResponse.js       # Standardized API responses
-    apiError.js          # Custom error classes
-    asyncHandler.js      # Async error handling wrapper
-    Cookies.js           # Cookie management
-    email.js             # Email sending utilities
-    generateTokens.js    # Token generation utilities
-    hashing.js           # Password hashing utilities
-    jwt.js               # JWT token utilities
-    pagination.js        # Pagination helper functions
-    viewHelpers.js       # EJS template helpers
-  templates/
-    emailTemplates.js    # Email template system
-  factories/             # Data factories for testing
-    userFactory.js       # User data factory
-    run.js               # Factory runner
-  console/               # CLI tools and generators
-    index.js             # Console command interface
-    templates/           # Code generation templates
-```
+1. **Install dependencies:**
+   ```bash
+   npm install
+   ```
 
-## API Overview
+2. **Set up environment variables:**
+   ```bash
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
 
-Base URL: `/api`
+3. **Setup sample data:**
+   ```bash
+   npm run setup
+   ```
 
-### Authentication Endpoints (`/api/auth`)
-- `POST /api/auth/register` - Register new patient
-- `POST /api/auth/login` - User login with JWT tokens
-- `POST /api/auth/logout` - User logout and token invalidation
-- `POST /api/auth/refresh` - Refresh access token
-- `GET /api/auth/verify-email/:token` - Verify email address
-- `POST /api/auth/forgot-password` - Request password reset
-- `POST /api/auth/reset-password/:token` - Reset password
+4. **Start the development server:**
+   ```bash
+   npm run dev
+   ```
 
-### Patient Endpoints (`/api/patient`)
-- `GET /api/patient/appointments` - Get patient's appointments
-- `POST /api/patient/appointments` - Create new appointment
-- `PATCH /api/patient/appointments/:id/cancel` - Cancel appointment
-- `GET /api/patient/record/me` - Get own medical record
-- `GET /api/patient/notifications/me` - Get notifications
+5. **The API will be available at:**
+   ```
+   http://localhost:5001/api
+   ```
 
-### Doctor Endpoints (`/api/doctor`)
-- `GET /api/doctor/profile/me` - Get doctor profile
-- `PUT /api/doctor/profile/me` - Update doctor profile
-- `GET /api/doctor/appointments/me` - Get doctor's appointments
-- `PATCH /api/doctor/appointments/:id/status` - Update appointment status
-- `GET /api/doctor/patients/:patientId/record` - Get patient record
-- `POST /api/doctor/patients/:patientId/visits` - Add medical visit
+## Sample Data
 
-### Nurse Endpoints (`/api/nurse`)
-- `GET /api/nurse/profile/me` - Get nurse profile
-- `GET /api/nurse/appointments/me` - Get nurse's appointments
-- `GET /api/nurse/patients/me` - Get assigned patients
+The system comes with pre-loaded sample data:
 
-### Secretary Endpoints (`/api/secretary`)
-- `GET /api/secretary/profile/me` - Get secretary profile
-- `GET /api/secretary/appointments` - Get all appointments
-- `GET /api/secretary/patients` - Get all patients
+### Users:
+- **Admin**: admin@pharmacy.com / admin123
+- **Pharmacist**: pharmacist@pharmacy.com / pharmacist123
+- **Staff**: staff@pharmacy.com / staff123
 
-### Admin Endpoints (`/api/admin`)
+### Medications:
+- Paracetamol 500mg (15.50 SAR)
+- Amoxicillin 250mg (25.00 SAR)
+- Ibuprofen 400mg (18.75 SAR)
+- Omeprazole 20mg (35.00 SAR)
+- Loratadine 10mg (22.50 SAR)
+
+### Client:
+- Healthcare Care Clinic (CLINIC_001)
+
+## API Endpoints Summary
+
+### Authentication
+- `POST /api/auth/register` - Register new user
+- `POST /api/auth/login` - User login
+- `POST /api/auth/refresh` - Refresh token
+- `POST /api/auth/logout` - User logout
+- `GET /api/auth/profile` - Get user profile
+- `PUT /api/auth/profile` - Update user profile
+
+### Admin Management
 - `GET /api/admin/users` - Get all users
-- `POST /api/admin/users` - Create new user
+- `POST /api/admin/users` - Create user
+- `GET /api/admin/users/:id` - Get user by ID
 - `PUT /api/admin/users/:id` - Update user
 - `DELETE /api/admin/users/:id` - Delete user
-- `GET /api/admin/logs` - Get system logs
-- `GET /api/admin/notifications` - Get all notifications
+- `PUT /api/admin/users/:id/password` - Change user password
+- `GET /api/admin/users/stats` - User statistics
 
-### Shared Endpoints (`/api/user`)
-- `GET /api/user/me` - Get current user profile
-- `PUT /api/user/me` - Update current user profile
+### Medication Management
+- `GET /api/medications` - Get all medications
+- `POST /api/medications` - Create medication
+- `GET /api/medications/:id` - Get medication by ID
+- `PUT /api/medications/:id` - Update medication
+- `DELETE /api/medications/:id` - Delete medication
+- `PUT /api/medications/:id/stock` - Update stock
+- `GET /api/medications/low-stock` - Get low stock medications
+- `GET /api/medications/stats` - Medication statistics
 
-## User Roles and Permissions
-
-### Role-Based Access Control
-The system implements a comprehensive role-based access control (RBAC) system:
-
-#### Patient Role
-- Create and manage own appointments
-- View own medical records
-- Receive notifications
-- Cancel appointments
-
-#### Doctor Role
-- Manage own appointments
-- View and update patient medical records
-- Add medical visits and diagnoses
-- Update appointment statuses
-- Manage working hours and availability
-
-#### Nurse Role
-- View assigned appointments
-- Assist with patient management
-- Update patient information
-- View patient records
-
-#### Secretary Role
-- Manage all appointments
-- View all patients
-- Schedule appointments for patients
-- Handle administrative tasks
-
-#### Admin Role
-- Full system access
-- User management
-- System configuration
-- View system logs
-- Manage roles and permissions
-
-### Permission System
-Each role has specific permissions that control access to different features:
-- `create:appointment` - Create appointments
-- `read:patient_record` - Read patient records
-- `update:own_profile` - Update own profile
-- `read:own_appointments` - Read own appointments
-- `create:visit` - Add medical visits
-- `update:appointment` - Update appointment status
-
-## Authentication Flow
-
-### JWT Token System
-- **Access Tokens**: Short-lived (15 minutes) for API access
-- **Refresh Tokens**: Long-lived (7 days) for token renewal
-- **HTTP-only Cookies**: Secure token storage
-- **Role-based Payload**: User ID, role, profile ID, and permissions
-
-### Login Process
-1. User provides email and password
-2. System validates credentials using bcryptjs
-3. JWT tokens generated with user data and permissions
-4. Tokens stored in HTTP-only cookies
-5. Refresh token saved to database
-
-### Protected Routes
-- `authMiddleware` extracts and verifies JWT tokens
-- User data attached to `req.user` object
-- Permission-based authorization for specific actions
-
-## Data Models
-
-### Core Models
-- **User**: Base user information with role assignment
-- **Patient**: Patient-specific data linked to medical records
-- **Doctor**: Doctor profiles with specialization and working hours
-- **Nurse**: Nurse profiles with assigned doctors
-- **Secretary**: Administrative staff profiles
-- **Appointment**: Medical appointment scheduling
-- **PatientRecord**: Comprehensive medical history
-- **Role**: User roles and permission definitions
-
-### Key Features
-- **MongoDB Integration**: Mongoose ODM for database operations
-- **Data Validation**: Joi schemas for input validation
-- **Timestamps**: Automatic creation and update tracking
-- **References**: Proper relationships between models
-- **Indexing**: Optimized database queries
+### Prescription Management
+- `POST /api/prescriptions` - Create prescription
+- `GET /api/prescriptions` - Get all prescriptions
+- `GET /api/prescriptions/search/:patientName` - Search by patient name
+- `PUT /api/prescriptions/:id/status` - Update prescription status
 
 ## Security Features
 
-### Authentication Security
-- JWT with secure signing
-- HTTP-only cookies prevent XSS attacks
-- Refresh token rotation
+- JWT-based authentication
 - Password hashing with bcryptjs
-
-### Authorization Security
-- Role-based access control (RBAC)
-- Permission-based authorization
-- Route-level protection
-- Profile-specific data access
-
-### General Security
-- Helmet.js for security headers
-- CORS configuration
+- Role-based access control
 - Input validation and sanitization
-- Error handling without information leakage
+- CORS protection
+- Helmet for security headers
 
-## API Documentation
+## Error Handling
 
-For detailed API documentation, see [API_DOCUMENTATION.md](./API_DOCUMENTATION.md)
+All endpoints return consistent error responses:
 
-## Development
+```json
+{
+  "status": "error",
+  "message": "Error description"
+}
+```
 
-### Prerequisites
-- Node.js 18+
-- MongoDB 4.4+
-- npm or yarn
-
-### Setup
-1. Clone the repository
-2. Install dependencies: `npm install`
-3. Configure environment variables
-4. Start MongoDB
-5. Run development server: `npm run dev`
-
-### Testing
-- Use Postman or similar tools for API testing
-- Include `Authorization: Bearer <token>` header for protected routes
-- Test different user roles and permissions
-
-## Contributing
-
-1. Fork the repository
-2. Create a feature branch
-3. Make your changes
-4. Add tests if applicable
-5. Submit a pull request
-
-## License
-
-This project is licensed under the ISC License - see the LICENSE file for details.
-
-## Support
-
-For support and questions, please contact the development team or create an issue in the repository. 
+### Common HTTP Status Codes
+- `200` - Success
+- `201` - Created
+- `400` - Bad Request
+- `401` - Unauthorized
+- `403` - Forbidden
+- `404` - Not Found
+- `409` - Conflict
+- `500` - Internal Server Error
