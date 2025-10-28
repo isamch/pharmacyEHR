@@ -27,11 +27,10 @@ const prescriptionSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  clientId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'Client',
+  clinicCode: {
+    type: String,
     required: true
-  },
+  }, // Clinic code that sent the prescription
   medications: [{
     medicationId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -91,7 +90,7 @@ const prescriptionSchema = new mongoose.Schema({
 });
 
 // Indexes for better performance
-prescriptionSchema.index({ clientId: 1, prescriptionDate: -1 });
+prescriptionSchema.index({ clinicCode: 1, prescriptionDate: -1 });
 prescriptionSchema.index({ patientId: 1 });
 prescriptionSchema.index({ status: 1 });
 prescriptionSchema.index({ prescriptionId: 1 });

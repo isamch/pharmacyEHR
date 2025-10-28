@@ -1,712 +1,1265 @@
 openapi: 3.0.3
 info:
-  title: Clinic EHR API
-  version: '1.0.0'
-  description: >
-    REST API for a multi-doctor clinic EHR. Auth via JWT (access+refresh). MongoDB backend.
+  title: CareFlow EHR & Pharmacy Management System API
+  description: Complete API documentation for CareFlow EHR system and Pharmacy microservice integration
+  version: 1.0.0
+  contact:
+    name: CareFlow Support
+    email: support@careflow.com
+
 servers:
-  - url: https://api.clinic.example.com/v1
-tags:
-  - name: auth
-  - name: users
-  - name: patients
-  - name: appointments
-  - name: doctors
-  - name: nurses
-  - name: notifications
-  - name: logs
+  - url: http://localhost:5000/api
+    description: CareFlow EHR Development server
+  - url: http://localhost:5001/api
+    description: Pharmacy Microservice Development server
+
+security:
+  - BearerAuth: []
+  - ApiTokenAuth: []
+
+paths:
+  # ==========================================
+  # CARE FLOW EHR ENDPOINTS
+  # ==========================================
+
+  # Authentication Routes
+  /auth/register:
+    post:
+      summary: Register a new patient
+      description: Create a new patient account in the EHR system
+      tags:
+        - CareFlow Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+                - password
+              properties:
+                name:
+                  type: string
+                  example: "Ali Bennani"
+                email:
+                  type: string
+                  format: email
+                  example: "ali@example.com"
+                password:
+                  type: string
+                  minLength: 6
+                  example: "123456"
+      responses:
+        '200':
+          description: Registration successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Registration successful. Please check your email."
+
+  /auth/login:
+    post:
+      summary: User login
+      description: Authenticate user and receive JWT tokens
+      tags:
+        - CareFlow Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "ali@example.com"
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "jwt_token_here"
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "64f1a2b3c4d5e6f7g8h9i0j1"
+                      name:
+                        type: string
+                        example: "Ali Bennani"
+
+  # User Routes
+  /user/me:
+    get:
+      summary: Get current user profile
+      description: Retrieve the current authenticated user's profile information
+      tags:
+        - CareFlow User
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: User profile retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "64f1a2b3c4d5e6f7g8h9i0j1"
+                  name:
+                    type: string
+                    example: "Ali Bennani"
+                  email:
+                    type: string
+                    example: "ali@example.com"
+
+  # Doctor Routes
+  /doctor/profile/me:
+    get:
+      summary: Get doctor profile
+      description: Retrieve the current doctor's profile information
+      tags:
+        - CareFlow Doctor
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Doctor profile retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "64f1a2b3c4d5e6f7g8h9i0j2"
+                  specialization:
+                    type: string
+                    example: "Internal Medicine"
+
+  /doctor/prescriptions/send-to-pharmacy:
+    post:
+      summary: Send prescription to pharmacy
+      description: Send a prescription from CareFlow EHR to the pharmacy system
+      tags:
+        - CareFlow Doctor
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - prescriptionId
+              properties:
+                prescriptionId:
+                  type: string
+                  example: "64f1a2b3c4d5e6f7g8h9i0j3"
+      responses:
+        '200':
+          description: Prescription sent successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                    example: "Prescription sent to pharmacy"
+                  result:
+                    type: object
+                    properties:
+                      status:
+                        type: string
+                        example: "pending"
+
+  # Patient Routes
+  /patient/record/me:
+    get:
+      summary: Get patient medical record
+      description: Retrieve the current patient's medical record
+      tags:
+        - CareFlow Patient
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Medical record retrieved
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "64f1a2b3c4d5e6f7g8h9i0j4"
+                  diagnosis:
+                    type: string
+                    example: "Hypertension"
+
+  # Secretary Routes
+  /secretary/patients:
+    post:
+      summary: Create new patient
+      description: Create a new patient record (Secretary only)
+      tags:
+        - CareFlow Secretary
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - name
+                - email
+              properties:
+                name:
+                  type: string
+                  example: "Fatima Alaoui"
+                email:
+                  type: string
+                  format: email
+                  example: "fatima@example.com"
+      responses:
+        '201':
+          description: Patient created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    example: "64f1a2b3c4d5e6f7g8h9i0j5"
+                  name:
+                    type: string
+                    example: "Fatima Alaoui"
+
+  # Admin Routes
+  /admin/users:
+    get:
+      summary: Get all users
+      description: Retrieve all system users (Admin only)
+      tags:
+        - CareFlow Admin
+      security:
+        - BearerAuth: []
+      responses:
+        '200':
+          description: Users retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  users:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        id:
+                          type: string
+                          example: "64f1a2b3c4d5e6f7g8h9i0j1"
+                        name:
+                          type: string
+                          example: "Ali Bennani"
+                        email:
+                          type: string
+                          example: "ali@example.com"
+                        role:
+                          type: string
+                          example: "patient"
+
+  # ==========================================
+  # PHARMACY MICROSERVICE ENDPOINTS
+  # ==========================================
+
+  # Pharmacy Authentication
+  /auth/login:
+    post:
+      summary: Pharmacy staff login
+      description: Authenticate pharmacy staff member
+      tags:
+        - Pharmacy Auth
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - email
+                - password
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: "pharmacist@example.com"
+                password:
+                  type: string
+                  example: "123456"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  token:
+                    type: string
+                    example: "jwt_token_here"
+                  user:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "64f1a2b3c4d5e6f7g8h9i0j6"
+                      name:
+                        type: string
+                        example: "Pharmacist Name"
+
+  # Pharmacy Prescription Routes
+  /prescriptions:
+    post:
+      summary: Create prescription (from clinic)
+      description: Create a new prescription from an external clinic system (e.g., CareFlow EHR)
+      tags:
+        - Pharmacy Prescriptions
+      security:
+        - ApiTokenAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - patientName
+                - doctorName
+                - medications
+              properties:
+                patientId:
+                  type: string
+                  description: External patient ID from clinic system
+                  example: "PAT_12345"
+                patientName:
+                  type: string
+                  description: Patient's full name
+                  example: "John Doe"
+                patientAge:
+                  type: integer
+                  description: Patient's age
+                  example: 35
+                patientPhone:
+                  type: string
+                  description: Patient's phone number
+                  example: "+212600000000"
+                doctorName:
+                  type: string
+                  description: Doctor's full name
+                  example: "Dr. Ahmed Bennani"
+                doctorLicense:
+                  type: string
+                  description: Doctor's license number
+                  example: "DOC_123456"
+                clinicName:
+                  type: string
+                  description: Clinic or hospital name
+                  example: "CareFlow Clinic Marrakech"
+                medications:
+                  type: array
+                  description: List of prescribed medications
+                  items:
+                    type: object
+                    required:
+                      - medicationName
+                      - quantity
+                      - dosage
+                    properties:
+                      medicationName:
+                        type: string
+                        description: Name of the medication
+                        example: "Paracetamol"
+                      medicationId:
+                        type: string
+                        description: External medication code
+                        example: "MED_001"
+                      quantity:
+                        type: integer
+                        description: Quantity prescribed
+                        example: 20
+                      dosage:
+                        type: string
+                        description: Dosage instructions
+                        example: "500mg every 8 hours"
+                      duration:
+                        type: string
+                        description: Treatment duration
+                        example: "7 days"
+                      notes:
+                        type: string
+                        description: Additional notes for this medication
+                        example: "Take after meals"
+                prescriptionNotes:
+                  type: string
+                  description: General prescription notes
+                  example: "Patient has allergy to penicillin"
+                prescriptionDate:
+                  type: string
+                  format: date-time
+                  description: Date when prescription was issued
+                  example: "2024-01-15T10:30:00.000Z"
+      responses:
+        '201':
+          description: Prescription created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Prescription created successfully"
+                  data:
+                    type: object
+                    properties:
+                      prescriptionId:
+                        type: string
+                        example: "PRESC_1705312200000_abc123def"
+                      status:
+                        type: string
+                        example: "pending"
+                      totalCost:
+                        type: number
+                        example: 45.50
+                      estimatedReadyTime:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T11:00:00.000Z"
+                      medications:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            medicationId:
+                              type: string
+                              example: "64f1a2b3c4d5e6f7g8h9i0j1"
+                            medicationName:
+                              type: string
+                              example: "Paracetamol"
+                            quantity:
+                              type: integer
+                              example: 20
+                            dosage:
+                              type: string
+                              example: "500mg every 8 hours"
+                            duration:
+                              type: string
+                              example: "7 days"
+                            notes:
+                              type: string
+                              example: "Take after meals"
+                            price:
+                              type: number
+                              example: 2.50
+                            totalPrice:
+                              type: number
+                              example: 50.00
+
+    get:
+      summary: Get all prescriptions for client
+      description: Retrieve all prescriptions for the authenticated client with optional filtering
+      tags:
+        - Pharmacy Prescriptions
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: perPage
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of items per page
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, processing, ready, completed, cancelled]
+          description: Filter by prescription status
+        - name: patientName
+          in: query
+          schema:
+            type: string
+          description: Filter by patient name (case-insensitive)
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter prescriptions from this date
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Filter prescriptions until this date
+      responses:
+        '200':
+          description: Prescriptions retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Prescriptions retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 25
+                      page:
+                        type: integer
+                        example: 1
+                      perPage:
+                        type: integer
+                        example: 10
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "64f1a2b3c4d5e6f7g8h9i0j1"
+                            prescriptionId:
+                              type: string
+                              example: "PRESC_1705312200000_abc123def"
+                            patientId:
+                              type: string
+                              example: "PAT_12345"
+                            patientName:
+                              type: string
+                              example: "John Doe"
+                            patientAge:
+                              type: integer
+                              example: 35
+                            patientPhone:
+                              type: string
+                              example: "+212600000000"
+                            doctorName:
+                              type: string
+                              example: "Dr. Ahmed Bennani"
+                            doctorLicense:
+                              type: string
+                              example: "DOC_123456"
+                            clinicName:
+                              type: string
+                              example: "CareFlow Clinic Marrakech"
+                            medications:
+                              type: array
+                              items:
+                                type: object
+                                properties:
+                                  medicationId:
+                                    type: string
+                                    example: "64f1a2b3c4d5e6f7g8h9i0j2"
+                                  medicationName:
+                                    type: string
+                                    example: "Paracetamol"
+                                  quantity:
+                                    type: integer
+                                    example: 20
+                                  dosage:
+                                    type: string
+                                    example: "500mg every 8 hours"
+                                  duration:
+                                    type: string
+                                    example: "7 days"
+                                  notes:
+                                    type: string
+                                    example: "Take after meals"
+                                  price:
+                                    type: number
+                                    example: 2.50
+                                  totalPrice:
+                                    type: number
+                                    example: 50.00
+                            prescriptionNotes:
+                              type: string
+                              example: "Patient has allergy to penicillin"
+                            prescriptionDate:
+                              type: string
+                              format: date-time
+                              example: "2024-01-15T10:30:00.000Z"
+                            status:
+                              type: string
+                              enum: [pending, processing, ready, completed, cancelled]
+                              example: "pending"
+                            totalCost:
+                              type: number
+                              example: 45.50
+                            notes:
+                              type: string
+                              example: "Pharmacy notes"
+                            processedBy:
+                              type: string
+                              example: "64f1a2b3c4d5e6f7g8h9i0j3"
+                            processedAt:
+                              type: string
+                              format: date-time
+                              example: "2024-01-15T11:00:00.000Z"
+                            readyAt:
+                              type: string
+                              format: date-time
+                              example: "2024-01-15T11:30:00.000Z"
+                            completedAt:
+                              type: string
+                              format: date-time
+                              example: "2024-01-15T12:00:00.000Z"
+                            createdAt:
+                              type: string
+                              format: date-time
+                              example: "2024-01-15T10:30:00.000Z"
+                            updatedAt:
+                              type: string
+                              format: date-time
+                              example: "2024-01-15T11:00:00.000Z"
+
+  /prescriptions/statistics:
+    get:
+      summary: Get prescription statistics for client
+      description: Retrieve aggregated statistics for prescriptions
+      tags:
+        - Pharmacy Prescriptions
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: dateFrom
+          in: query
+          schema:
+            type: string
+            format: date
+          description: Start date for statistics
+        - name: dateTo
+          in: query
+          schema:
+            type: string
+            format: date
+          description: End date for statistics
+      responses:
+        '200':
+          description: Statistics retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Statistics retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      totalPrescriptions:
+                        type: integer
+                        example: 150
+                      totalCost:
+                        type: number
+                        example: 12500.75
+                      pendingCount:
+                        type: integer
+                        example: 12
+                      completedCount:
+                        type: integer
+                        example: 138
+
+  /prescriptions/{id}:
+    get:
+      summary: Get prescription by ID
+      description: Retrieve a specific prescription by its ID
+      tags:
+        - Pharmacy Prescriptions
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prescription ID
+      responses:
+        '200':
+          description: Prescription retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Prescription retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "64f1a2b3c4d5e6f7g8h9i0j1"
+                      prescriptionId:
+                        type: string
+                        example: "PRESC_1705312200000_abc123def"
+                      patientId:
+                        type: string
+                        example: "PAT_12345"
+                      patientName:
+                        type: string
+                        example: "John Doe"
+                      patientAge:
+                        type: integer
+                        example: 35
+                      patientPhone:
+                        type: string
+                        example: "+212600000000"
+                      doctorName:
+                        type: string
+                        example: "Dr. Ahmed Bennani"
+                      doctorLicense:
+                        type: string
+                        example: "DOC_123456"
+                      clinicName:
+                        type: string
+                        example: "CareFlow Clinic Marrakech"
+                      clientId:
+                        type: string
+                        example: "64f1a2b3c4d5e6f7g8h9i0j4"
+                      medications:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            medicationId:
+                              type: string
+                              example: "64f1a2b3c4d5e6f7g8h9i0j2"
+                            medicationName:
+                              type: string
+                              example: "Paracetamol"
+                            quantity:
+                              type: integer
+                              example: 20
+                            dosage:
+                              type: string
+                              example: "500mg every 8 hours"
+                            duration:
+                              type: string
+                              example: "7 days"
+                            notes:
+                              type: string
+                              example: "Take after meals"
+                            price:
+                              type: number
+                              example: 2.50
+                            totalPrice:
+                              type: number
+                              example: 50.00
+                      prescriptionNotes:
+                        type: string
+                        example: "Patient has allergy to penicillin"
+                      prescriptionDate:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T10:30:00.000Z"
+                      status:
+                        type: string
+                        enum: [pending, processing, ready, completed, cancelled]
+                        example: "pending"
+                      totalCost:
+                        type: number
+                        example: 45.50
+                      notes:
+                        type: string
+                        example: "Pharmacy notes"
+                      processedBy:
+                        type: string
+                        example: "64f1a2b3c4d5e6f7g8h9i0j3"
+                      processedAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T11:00:00.000Z"
+                      readyAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T11:30:00.000Z"
+                      completedAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T12:00:00.000Z"
+                      createdAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T10:30:00.000Z"
+                      updatedAt:
+                        type: string
+                        format: date-time
+                        example: "2024-01-15T11:00:00.000Z"
+
+    put:
+      summary: Update prescription status
+      description: Update the status of a prescription
+      tags:
+        - Pharmacy Prescriptions
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Prescription ID
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - status
+              properties:
+                status:
+                  type: string
+                  enum: [pending, processing, ready, completed, cancelled]
+                  example: "completed"
+                notes:
+                  type: string
+                  description: Additional notes for status update
+                  example: "Prescription ready for pickup"
+      responses:
+        '200':
+          description: Prescription status updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Prescription status updated successfully"
+                  data:
+                    type: object
+                    properties:
+                      prescriptionId:
+                        type: string
+                        example: "PRESC_1705312200000_abc123def"
+                      status:
+                        type: string
+                        example: "completed"
+                      notes:
+                        type: string
+                        example: "Prescription ready for pickup"
+
+  /medications:
+    get:
+      summary: Get available medications
+      description: Retrieve list of available medications with optional filtering
+      tags:
+        - Pharmacy Medications
+      security:
+        - ApiTokenAuth: []
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Page number for pagination
+        - name: perPage
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Number of items per page
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search by medication name or code
+        - name: category
+          in: query
+          schema:
+            type: string
+          description: Filter by medication category
+        - name: requiresPrescription
+          in: query
+          schema:
+            type: string
+            enum: [true, false]
+          description: Filter by prescription requirement
+      responses:
+        '200':
+          description: Medications retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: "success"
+                  message:
+                    type: string
+                    example: "Medications retrieved successfully"
+                  data:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                        example: 150
+                      page:
+                        type: integer
+                        example: 1
+                      perPage:
+                        type: integer
+                        example: 10
+                      data:
+                        type: array
+                        items:
+                          type: object
+                          properties:
+                            id:
+                              type: string
+                              example: "64f1a2b3c4d5e6f7g8h9i0j1"
+                            name:
+                              type: string
+                              example: "Paracetamol"
+                            code:
+                              type: string
+                              example: "PAR_500"
+                            description:
+                              type: string
+                              example: "Pain relief medication"
+                            stockQuantity:
+                              type: integer
+                              example: 500
+                            unit:
+                              type: string
+                              example: "tablets"
+                            price:
+                              type: number
+                              example: 2.50
+                            requiresPrescription:
+                              type: boolean
+                              example: false
+                            category:
+                              type: string
+                              example: "Pain Relief"
+
+  # ==========================================
+  # INTER-SERVICE COMMUNICATION ENDPOINTS
+  # ==========================================
+
+  # Pharmacy to CareFlow Verification Endpoints (Future Implementation)
+  /verify/patient/{patientId}:
+    get:
+      summary: Verify patient information
+      description: Pharmacy verifies patient data with CareFlow EHR (requires JWT)
+      tags:
+        - Inter-Service Communication
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: patientId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Patient ID to verify
+      responses:
+        '200':
+          description: Patient verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified:
+                    type: boolean
+                    example: true
+                  patient:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "64f1a2b3c4d5e6f7g8h9i0j1"
+                      name:
+                        type: string
+                        example: "John Doe"
+                      dateOfBirth:
+                        type: string
+                        format: date
+                        example: "1990-01-15"
+                      bloodType:
+                        type: string
+                        example: "A+"
+
+  /verify/doctor/{doctorId}:
+    get:
+      summary: Verify doctor information
+      description: Pharmacy verifies doctor credentials with CareFlow EHR (requires JWT)
+      tags:
+        - Inter-Service Communication
+      security:
+        - BearerAuth: []
+      parameters:
+        - name: doctorId
+          in: path
+          required: true
+          schema:
+            type: string
+          description: Doctor ID to verify
+      responses:
+        '200':
+          description: Doctor verified successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  verified:
+                    type: boolean
+                    example: true
+                  doctor:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "64f1a2b3c4d5e6f7g8h9i0j2"
+                      name:
+                        type: string
+                        example: "Dr. Ahmed Bennani"
+                      license:
+                        type: string
+                        example: "DOC_123456"
+                      specialization:
+                        type: string
+                        example: "Internal Medicine"
+
 components:
   securitySchemes:
     BearerAuth:
       type: http
       scheme: bearer
-      bearerFormat: JWT
+      description: JWT token authentication for CareFlow EHR users
+    ApiTokenAuth:
+      type: http
+      scheme: bearer
+      description: API token authentication for Pharmacy clients. Use format "Bearer ph_sk_xxxxxxxxxxxxxxxx"
 
   schemas:
-
     Error:
       type: object
       properties:
-        code:
-          type: integer
+        status:
+          type: string
+          example: "error"
         message:
           type: string
-        details:
-          type: object
-      example:
-        code: 409
-        message: "Appointment conflict: doctor unavailable at requested time"
-        details:
-          conflictingAppointmentId: "615f0c..."
+          example: "Error description"
+        stack:
+          type: string
+          example: null
 
-    AuthRegister:
+    CareFlowUser:
       type: object
-      required: [fullName, email, password, role]
       properties:
+        id:
+          type: string
         fullName:
           type: string
         email:
           type: string
-          format: email
-        password:
-          type: string
-          minLength: 8
         role:
           type: string
           enum: [patient, doctor, nurse, secretary, admin]
-      example:
-        fullName: "Omar Benali"
-        email: "omar@example.com"
-        password: "StrongP@ssw0rd"
-        role: "patient"
-
-    AuthLogin:
-      type: object
-      required: [email, password]
-      properties:
-        email:
-          type: string
-          format: email
-        password:
-          type: string
-      example:
-        email: "omar@example.com"
-        password: "StrongP@ssw0rd"
-
-    TokenResponse:
-      type: object
-      properties:
-        accessToken:
-          type: string
-        refreshToken:
-          type: string
-        expiresIn:
-          type: integer
-      example:
-        accessToken: "eyJhbGciOi..."
-        refreshToken: "rft_eyJhbGci..."
-        expiresIn: 3600
-
-    User:
-      type: object
-      properties:
-        id:
-          type: string
-        fullName:
-          type: string
-        email:
-          type: string
-        role:
-          type: string
-          enum: [admin, doctor, nurse, secretary, patient]
         status:
           type: string
-          enum: [active, suspended]
-        specialization:
-          type: string
-        nurseId:
-          type: string
-        assignedDoctor:
-          type: string
+          enum: [active, suspended, pending_verification]
+        isEmailVerified:
+          type: boolean
         createdAt:
           type: string
           format: date-time
-      example:
-        id: "u_615f0c..."
-        fullName: "Dr. Karim"
-        email: "karim@clinic.com"
-        role: "doctor"
-        specialization: "cardiology"
-        nurseId: "u_8b3a21..."
-        createdAt: "2025-10-10T09:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
 
-    PatientRecord:
+    PharmacyPrescription:
       type: object
       properties:
         id:
           type: string
+        prescriptionId:
+          type: string
         patientId:
           type: string
-        lastUpdated:
+        patientName:
           type: string
-          format: date-time
-        visits:
+        patientAge:
+          type: integer
+        patientPhone:
+          type: string
+        doctorName:
+          type: string
+        doctorLicense:
+          type: string
+        clinicName:
+          type: string
+        clientId:
+          type: string
+        medications:
           type: array
           items:
-            $ref: '#/components/schemas/Visit'
-      example:
-        id: "pr_5f..."
-        patientId: "u_p123"
-        lastUpdated: "2025-10-10T09:30:00Z"
-        visits:
-          - visitId: "v_1"
-            date: "2025-10-10T09:30:00Z"
-            doctorId: "u_d1"
-            nurseId: "u_n1"
-            diagnosis: ["Hypertension"]
-            symptoms: ["headache", "dizziness"]
-            treatments:
-              - name: "Amlodipine"
-                dosage: "5mg"
-                duration: "30 days"
-            notes: "Follow-up in 1 month"
-
-    Visit:
-      type: object
-      properties:
-        visitId:
+            $ref: '#/components/schemas/PharmacyMedicationItem'
+        prescriptionNotes:
           type: string
-        date:
+        prescriptionDate:
           type: string
           format: date-time
-        doctorId:
-          type: string
-        nurseId:
-          type: string
-        diagnosis:
-          type: array
-          items: { type: string }
-        symptoms:
-          type: array
-          items: { type: string }
-        treatments:
-          type: array
-          items:
-            type: object
-            properties:
-              name: { type: string }
-              dosage: { type: string }
-              duration: { type: string }
-        notes:
-          type: string
-
-    Appointment:
-      type: object
-      properties:
-        id: { type: string }
-        patientId: { type: string }
-        doctorId: { type: string }
-        nurseId: { type: string, nullable: true }
-        secretaryId: { type: string, nullable: true }
-        startTime: { type: string, format: date-time }
-        endTime: { type: string, format: date-time }
         status:
           type: string
-          enum: [scheduled, in-progress, completed, cancelled, no-show]
-        reason: { type: string }
-        notes: { type: string }
-        createdAt: { type: string, format: date-time }
-      example:
-        id: "a_615f..."
-        patientId: "u_p123"
-        doctorId: "u_d1"
-        nurseId: "u_n1"
-        startTime: "2025-11-01T09:30:00Z"
-        endTime: "2025-11-01T10:00:00Z"
-        status: "scheduled"
-        reason: "Follow-up"
+          enum: [pending, processing, ready, completed, cancelled]
+        totalCost:
+          type: number
+        notes:
+          type: string
+        processedBy:
+          type: string
+        processedAt:
+          type: string
+          format: date-time
+        readyAt:
+          type: string
+          format: date-time
+        completedAt:
+          type: string
+          format: date-time
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
 
-    AppointmentCreate:
-      type: object
-      required: [patientId, doctorId, startTime, endTime]
-      properties:
-        patientId: { type: string }
-        doctorId: { type: string }
-        nurseId: { type: string, nullable: true }
-        startTime: { type: string, format: date-time }
-        endTime: { type: string, format: date-time }
-        reason: { type: string }
-      example:
-        patientId: "u_p123"
-        doctorId: "u_d1"
-        startTime: "2025-11-01T09:30:00Z"
-        endTime: "2025-11-01T10:00:00Z"
-        reason: "Routine check"
-
-    AvailabilityResponse:
+    PharmacyMedicationItem:
       type: object
       properties:
-        doctorId: { type: string }
-        date: { type: string, format: date }
-        slots:
-          type: array
-          items:
-            type: object
-            properties:
-              start: { type: string, format: date-time }
-              end: { type: string, format: date-time }
-              available: { type: boolean }
+        medicationId:
+          type: string
+        medicationName:
+          type: string
+        quantity:
+          type: integer
+        dosage:
+          type: string
+        duration:
+          type: string
+        notes:
+          type: string
+        price:
+          type: number
+        totalPrice:
+          type: number
 
-    LogEntry:
+    PharmacyMedication:
       type: object
       properties:
-        id: { type: string }
-        userId: { type: string }
-        role: { type: string }
-        action: { type: string }
-        target:
-          type: object
-          properties:
-            type: { type: string }
-            id: { type: string }
-        description: { type: string }
-        createdAt: { type: string, format: date-time }
+        id:
+          type: string
+        name:
+          type: string
+        code:
+          type: string
+        description:
+          type: string
+        stockQuantity:
+          type: integer
+        unit:
+          type: string
+        price:
+          type: number
+        requiresPrescription:
+          type: boolean
+        category:
+          type: string
 
-  parameters:
-    pageParam:
-      name: page
-      in: query
-      schema:
-        type: integer
-        default: 1
-    perPageParam:
-      name: perPage
-      in: query
-      schema:
-        type: integer
-        default: 20
-        maximum: 100
-
-security:
-  - BearerAuth: []
-
-paths:
-
-  /auth/register:
-    post:
-      tags: [auth]
-      summary: Register new user
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/AuthRegister' }
-      responses:
-        '201':
-          description: Created
-          content:
-            application/json:
-              schema:
-                $ref: '#/components/schemas/User'
-        '400':
-          description: Validation error
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Error' }
-
-  /auth/login:
-    post:
-      tags: [auth]
-      summary: Login (returns access + refresh tokens)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/AuthLogin' }
-      responses:
-        '200':
-          description: tokens
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/TokenResponse' }
-        '401':
-          description: Invalid credentials
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Error' }
-
-  /auth/refresh:
-    post:
-      tags: [auth]
-      summary: Refresh access token
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                refreshToken:
-                  type: string
-      responses:
-        '200':
-          description: new tokens
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/TokenResponse' }
-        '401':
-          description: invalid / expired refresh token
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Error' }
-
-  /users:
-    get:
-      tags: [users]
-      summary: List users (admin only)
-      parameters:
-        - $ref: '#/components/parameters/pageParam'
-        - $ref: '#/components/parameters/perPageParam'
-        - name: role
-          in: query
-          schema:
-            type: string
-      responses:
-        '200':
-          description: paginated list
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  total: { type: integer }
-                  page: { type: integer }
-                  perPage: { type: integer }
-                  data:
-                    type: array
-                    items: { $ref: '#/components/schemas/User' }
-        '403':
-          description: forbidden
-
-    post:
-      tags: [users]
-      summary: Create user (admin)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              allOf:
-                - $ref: '#/components/schemas/AuthRegister'
-      responses:
-        '201':
-          description: created
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/User' }
-
-  /users/{id}:
-    get:
-      tags: [users]
-      summary: Get user by id (admin or self)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          description: user
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/User' }
-        '404':
-          description: not found
-
-    put:
-      tags: [users]
-      summary: Update user (admin or self)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-      responses:
-        '200':
-          description: updated
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/User' }
-
-    delete:
-      tags: [users]
-      summary: Soft-delete user (admin)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '204':
-          description: deleted (soft)
-
-  /patients:
-    post:
-      tags: [patients]
-      summary: Create patient record (doctor / admin / secretary)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [patientId]
-              properties:
-                patientId: { type: string }
-      responses:
-        '201':
-          description: created
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/PatientRecord' }
-
-    get:
-      tags: [patients]
-      summary: Search / list patients
-      parameters:
-        - $ref: '#/components/parameters/pageParam'
-        - $ref: '#/components/parameters/perPageParam'
-        - name: q
-          in: query
-          schema:
-            type: string
-            description: search by name, email or phone
-      responses:
-        '200':
-          description: list
-
-  /patients/{id}:
-    get:
-      tags: [patients]
-      summary: Get patient record with visits (doctor with permission or patient)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          description: patient record
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/PatientRecord' }
-        '403':
-          description: forbidden
-        '404':
-          description: not found
-
-  /patients/{id}/visits:
-    post:
-      tags: [patients]
-      summary: Add a visit (doctor)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              $ref: '#/components/schemas/Visit'
-      responses:
-        '201':
-          description: visit added
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Visit' }
-        '403':
-          description: forbidden
-
-  /appointments:
-    post:
-      tags: [appointments]
-      summary: Create appointment (patient / secretary / doctor)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema: { $ref: '#/components/schemas/AppointmentCreate' }
-      responses:
-        '201':
-          description: created
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Appointment' }
-        '409':
-          description: Conflict - overlapping appointment
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Error' }
-
-    get:
-      tags: [appointments]
-      summary: List appointments (filterable)
-      parameters:
-        - name: doctorId
-          in: query
-          schema: { type: string }
-        - name: patientId
-          in: query
-          schema: { type: string }
-        - name: from
-          in: query
-          schema: { type: string, format: date-time }
-        - name: to
-          in: query
-          schema: { type: string, format: date-time }
-        - $ref: '#/components/parameters/pageParam'
-        - $ref: '#/components/parameters/perPageParam'
-      responses:
-        '200':
-          description: paginated appointments
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  page: { type: integer }
-                  perPage: { type: integer }
-                  total: { type: integer }
-                  data:
-                    type: array
-                    items: { $ref: '#/components/schemas/Appointment' }
-
-  /appointments/{id}:
-    get:
-      tags: [appointments]
-      summary: Get appointment details
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Appointment' }
-
-    put:
-      tags: [appointments]
-      summary: Update appointment (time/status/notes)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      requestBody:
-        content:
-          application/json:
-            schema:
-              type: object
-              properties:
-                startTime: { type: string, format: date-time }
-                endTime: { type: string, format: date-time }
-                status: { type: string }
-                nurseId: { type: string }
-      responses:
-        '200':
-          description: updated
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/Appointment' }
-        '409':
-          description: conflict on time change
-
-    delete:
-      tags: [appointments]
-      summary: Cancel appointment (soft)
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '204':
-          description: canceled
-
-  /doctors/{id}/availability:
-    get:
-      tags: [doctors]
-      summary: Get availability slots for doctor on a date
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-        - name: date
-          in: query
-          required: true
-          schema: { type: string, format: date }
-      responses:
-        '200':
-          description: slots
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/AvailabilityResponse' }
-
-  /nurses/{id}:
-    get:
-      tags: [nurses]
-      summary: Get nurse profile, assigned doctor and shifts
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema: { type: string }
-      responses:
-        '200':
-          content:
-            application/json:
-              schema: { $ref: '#/components/schemas/User' }
-
-  /notifications:
-    get:
-      tags: [notifications]
-      summary: Get notifications for current user
-      parameters:
-        - $ref: '#/components/parameters/pageParam'
-        - $ref: '#/components/parameters/perPageParam'
-      responses:
-        '200':
-          description: list
-
-    post:
-      tags: [notifications]
-      summary: Create a system notification (admin)
-      requestBody:
-        required: true
-        content:
-          application/json:
-            schema:
-              type: object
-              required: [userId, title, message]
-              properties:
-                userId: { type: string }
-                title: { type: string }
-                message: { type: string }
-                type: { type: string }
-      responses:
-        '201':
-          description: created
-
-  /logs:
-    get:
-      tags: [logs]
-      summary: Get audit logs (admin)
-      parameters:
-        - $ref: '#/components/parameters/pageParam'
-        - $ref: '#/components/parameters/perPageParam'
-      responses:
-        '200':
-          description: list
-          content:
-            application/json:
-              schema:
-                type: object
-                properties:
-                  data:
-                    type: array
-                    items: { $ref: '#/components/schemas/LogEntry' }
-
-externalDocs:
-  description: Implementation notes (transactions, indexes, conflict handling)
-  url: https://example.com/clinic-ehr/api-notes
+tags:
+  - name: CareFlow Auth
+    description: CareFlow EHR authentication endpoints
+  - name: CareFlow User
+    description: CareFlow EHR user management endpoints
+  - name: CareFlow Doctor
+    description: CareFlow EHR doctor-specific endpoints
+  - name: CareFlow Patient
+    description: CareFlow EHR patient-specific endpoints
+  - name: CareFlow Secretary
+    description: CareFlow EHR secretary-specific endpoints
+  - name: CareFlow Admin
+    description: CareFlow EHR admin management endpoints
+  - name: Pharmacy Auth
+    description: Pharmacy staff authentication endpoints
+  - name: Pharmacy Prescriptions
+    description: Pharmacy prescription management endpoints
+  - name: Pharmacy Medications
+    description: Pharmacy medication inventory endpoints
+  - name: Inter-Service Communication
+    description: Endpoints for communication between CareFlow and Pharmacy services

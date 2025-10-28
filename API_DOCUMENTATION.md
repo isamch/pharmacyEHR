@@ -593,3 +593,147 @@ The API can be tested using tools like:
 - Any HTTP client
 
 Make sure to include the `Authorization: Bearer <token>` header for protected routes.
+
+# Pharmacy API Documentation
+
+## Overview
+Pharmacy API provides endpoints for prescription management, medication inventory, client management, and authentication. All endpoints return JSON. API authentication is via API Token in the `Authorization` header.
+
+---
+
+## Authentication
+
+### POST /api/auth/login
+- **Description:** Login for pharmacy staff.
+- **Request Body:**
+```json
+{
+  "email": "pharmacist@example.com",
+  "password": "123456"
+}
+```
+- **Response:**
+```json
+{
+  "token": "jwt_token",
+  "user": { "id": "...", "name": "Pharmacist" }
+}
+```
+- **Errors:**
+  - 401: Invalid credentials
+
+---
+
+## Prescription Endpoints
+
+### POST /api/prescriptions (API Token Required)
+- **Description:** Create a new prescription from an external system (e.g., CareFlow).
+- **Header:**
+```
+Authorization: Bearer ph_sk_xxxxxxxxxxxxxxxx
+```
+- **Request Body:**
+```json
+{
+  "patientId": "...",
+  "patientName": "Ali",
+  "doctorName": "Dr. Ahmed",
+  "medications": [
+    { "name": "Paracetamol", "dosage": "500mg", "quantity": 2 }
+  ],
+  "notes": "Take after meals"
+}
+```
+- **Response:**
+```json
+{
+  "id": "...",
+  "status": "pending"
+}
+```
+- **Errors:**
+  - 401: Invalid or expired API token
+  - 403: Insufficient permissions
+  - 400: Missing data
+
+### GET /api/prescriptions (API Token Required)
+- **Description:** Get all prescriptions for the client.
+- **Header:**
+```
+Authorization: Bearer ph_sk_xxxxxxxxxxxxxxxx
+```
+- **Response:**
+```json
+[
+  { "id": "...", "status": "pending" }
+]
+```
+- **Errors:**
+  - 401: Invalid API token
+
+---
+
+## Medication Endpoints
+
+### GET /api/medications (API Token Required)
+- **Description:** Get available medications.
+- **Header:**
+```
+Authorization: Bearer ph_sk_xxxxxxxxxxxxxxxx
+```
+- **Response:**
+```json
+[
+  { "id": "...", "name": "Paracetamol" }
+]
+```
+- **Errors:**
+  - 401: Invalid API token
+
+---
+
+## Client Management
+
+### POST /api/admin/clients/:clientId/tokens
+- **Description:** Create a new API token for a client.
+- **Request Body:**
+```json
+{
+  "name": "CareFlow API",
+  "permissions": ["create:prescriptions", "read:prescriptions"],
+  "expiresIn": "1y"
+}
+```
+- **Response:**
+```json
+{
+  "token": "ph_sk_xxxxxxxxxxxxxxxx"
+}
+```
+- **Errors:**
+  - 400: Missing or invalid data
+  - 404: Client not found
+
+---
+
+## Test Data
+- Example patient name: "Test Patient"
+- Example doctor name: "Test Doctor"
+- Example medication name: "TestMed"
+
+---
+
+## Common Errors
+- 400: Bad request
+- 401: Invalid or expired API token
+- 403: Insufficient permissions
+- 404: Not found
+- 500: Internal server error
+
+---
+
+## Notes
+- All protected endpoints require API token in header: `Authorization: Bearer ph_sk_xxxxxxxxxxxxxxxx`
+- All responses are JSON.
+
+For more details, see the code or contact the development team.

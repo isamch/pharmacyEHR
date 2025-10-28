@@ -9,7 +9,7 @@ const medicationSchema = new mongoose.Schema({
     type: String,
     unique: true,
     sparse: true
-  }, // Optional C IPM or internal code
+  }, // Optional CIPM or internal code
   description: String,
   stockQuantity: {
     type: Number,
