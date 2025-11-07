@@ -3,7 +3,7 @@ import cors from 'cors'
 import helmet from 'helmet'
 import morgan from 'morgan'
 import createError from 'http-errors'
-import mainRouter from './src/routes/router.js'
+import mainRouter from './src/routes/api.js'
 import errorHandler from './src/middleware/errorHandler.js'
 import cookieParser from "cookie-parser";
 const app = express()
@@ -22,7 +22,7 @@ if (process.env.NODE_ENV === 'development') {
 }
 
 // Main Router
-app.use(mainRouter)
+app.use("/api", mainRouter)
 
 // 404 Handler
 app.use((req, res, next) => {

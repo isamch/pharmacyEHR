@@ -120,6 +120,7 @@ export const getAllPrescriptions = asyncHandler(async (req, res) => {
 export const searchPrescriptionByPatientName = asyncHandler(async (req, res, next) => {
   const { patientName } = req.params;
 
+
   const prescriptions = await Prescription.find({
     patientName: { $regex: patientName, $options: 'i' },
     status: { $in: ['pending', 'processing', 'ready'] }

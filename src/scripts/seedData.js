@@ -1,8 +1,8 @@
 // File to add sample data for pharmacy with admin user
 import mongoose from 'mongoose';
-import Medication from './src/models/medication.model.js';
-import Client from './src/models/client.model.js';
-import PharmacyUser from './src/models/user.model.js';
+import Medication from './../models/medication.model.js';
+import Client from './../models/client.model.js';
+import PharmacyUser from './../models//user.model.js';
 
 // Sample medications data
 const sampleMedications = [
@@ -102,7 +102,7 @@ const sampleStaff = {
 export async function seedDatabase() {
   try {
     // Connect to database
-    await mongoose.connect(process.env.DB_URL || 'mongodb://localhost:27017/pharmacy_db');
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://isam:isam2003@localhost:27017/pharmacy_db?authSource=admin');
     console.log('Connected to database');
 
     // Clear existing data

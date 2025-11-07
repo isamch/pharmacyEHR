@@ -1,5 +1,5 @@
 import Medication from '../../models/medication.model.js';
-import { 
+import {
   successResponse,
   errorResponse,
   sanitizeInput,
@@ -11,37 +11,16 @@ import {
  * Get all medications
  */
 export const getAllMedications = async (req, res) => {
-  try {
-    const { page, perPage, skip } = getPagination(req.query);
-    const { search, category, requiresPrescription, inStock } = req.query;
 
-    // Build query
-    const query = {};
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: 'i' } },
-        { code: { $regex: search, $options: 'i' } },
-        { description: { $regex: search, $options: 'i' } }
-      ];
-    }
-    if (category) query.category = category;
-    if (requiresPrescription !== undefined) {
-      query.requiresPrescription = requiresPrescription === 'true';
-    }
-    if (inStock === 'true') {
-      query.stockQuantity = { $gt: 0 };
-    }
+
+  try {
 
     // Get medications with pagination
-    const medications = await Medication.find(query)
-      .sort({ name: 1 })
-      .skip(skip)
-      .limit(perPage);
+    const medications = await Medication.find();
 
-    const total = await Medication.countDocuments(query);
 
-    return successResponse(res, 200, 'Medications retrieved successfully', 
-      formatPaginatedResponse(medications, total, page, perPage)
+    return successResponse(res, 200, 'Medications retrieved successfully',
+      medications
     );
 
   } catch (error) {
@@ -49,6 +28,8 @@ export const getAllMedications = async (req, res) => {
     return errorResponse(res, 500, 'Failed to get medications', error);
   }
 };
+
+
 
 /**
  * Get medication by ID
@@ -75,16 +56,16 @@ export const getMedicationById = async (req, res) => {
  */
 export const createMedication = async (req, res) => {
   try {
-    const { 
-      name, 
-      code, 
-      description, 
-      stockQuantity = 0, 
-      unit = 'unit', 
-      price = 0, 
-      requiresPrescription = true, 
-      category, 
-      supplier 
+    const {
+      name,
+      code,
+      description,
+      stockQuantity = 0,
+      unit = 'unit',
+      price = 0,
+      requiresPrescription = true,
+      category,
+      supplier
     } = req.body;
 
     // Validate required fields
@@ -93,7 +74,7 @@ export const createMedication = async (req, res) => {
     }
 
     // Check if medication already exists
-    const existingMedication = await Medication.findOne({ 
+    const existingMedication = await Medication.findOne({
       $or: [
         { name: sanitizeInput(name) },
         { code: code ? sanitizeInput(code) : null }
@@ -115,7 +96,7 @@ export const createMedication = async (req, res) => {
       requiresPrescription: Boolean(requiresPrescription),
       category: category ? sanitizeInput(category) : undefined,
       supplier: supplier ? sanitizeInput(supplier) : undefined,
-      lastUpdatedBy: req.user.id
+      // lastUpdatedBy: req.user.id
     });
 
     return successResponse(res, 201, 'Medication created successfully', { medication });
@@ -132,20 +113,20 @@ export const createMedication = async (req, res) => {
 export const updateMedication = async (req, res) => {
   try {
     const { id } = req.params;
-    const { 
-      name, 
-      code, 
-      description, 
-      stockQuantity, 
-      unit, 
-      price, 
-      requiresPrescription, 
-      category, 
-      supplier 
+    const {
+      name,
+      code,
+      description,
+      stockQuantity,
+      unit,
+      price,
+      requiresPrescription,
+      category,
+      supplier
     } = req.body;
 
     const updateData = { lastUpdatedBy: req.user.id };
-    
+
     if (name) updateData.name = sanitizeInput(name);
     if (code !== undefined) updateData.code = code ? sanitizeInput(code) : undefined;
     if (description !== undefined) updateData.description = description ? sanitizeInput(description) : undefined;
@@ -232,7 +213,7 @@ export const updateStock = async (req, res) => {
     medication.lastUpdatedBy = req.user.id;
     await medication.save();
 
-    return successResponse(res, 200, 'Stock updated successfully', { 
+    return successResponse(res, 200, 'Stock updated successfully', {
       medication: {
         id: medication.id,
         name: medication.name,

@@ -3,7 +3,6 @@ import mongoose from 'mongoose';
 const prescriptionSchema = new mongoose.Schema({
   prescriptionId: {
     type: String,
-    unique: true,
     default: function() {
       return `PRESC_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     }
